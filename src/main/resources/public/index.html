@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Screen</title>
+
+    <script>
+
+        console.log('starting...');
+
+        var uuid = null;
+
+        window.onload = (onloadEvent) => {
+
+            let requestCount = 0;
+
+            const close = (message, ...args)=>{
+
+                console.log('CLOSE call', message, args);
+
+                (document.getElementsByTagName('body')[0]).innerHTML = '<div style="color:red;">CLOSED - '+message+', '+ args +'</div>' + (document.getElementsByTagName('body')[0]).innerHTML;
+
+                alert('backend closed!');
+                window.close();
+            };
+
+            document.addEventListener('contextmenu', (event)=>event.preventDefault());
+
+            document.body.addEventListener('keydown', (event) => {
+
+                if ( event.keyCode === 123 ) {
+                    // 123=F12 -> Debug
+                    return;
+                }
+
+                //console.log('key', event.keyCode, event.which, event.key, event.code, event);
+                //console.log('control/strg', event.ctrlKey);
+
+                event.preventDefault();
+            });
+
+            window.setInterval( ()=>{
+
+                const reqCnt = ++requestCount;
+
+                const xhr = new XMLHttpRequest();
+                xhr.status = null;
+                xhr.open('GET', '/api/alive/'+ (uuid!=null?uuid:'null'));
+                xhr.onload = (response) => {
+
+                    console.log('status, response, xhr', 'requestCount='+reqCnt, xhr.status, response, xhr )
+
+                    if ( xhr.status === 200 ) {
+
+                        const json = JSON.parse(xhr.response);
+                        console.log('json', 'requestCount='+reqCnt, json )
+
+                        if ( uuid == null ) {
+
+                            uuid = json.uuid;
+                            console.log( 'uuid', 'requestCount='+reqCnt, uuid );
+
+                        } else if ( !json.valid ) {
+
+                            close("json.invalid", 'requestCount='+reqCnt, JSON.stringify(json, null, 2));
+                        }
+
+                    } else {
+
+                        close("CLOSE status!=200", 'requestCount='+reqCnt, xhr);
+                    }
+                };
+                xhr.onerror = (error) => {
+                    close("CLOSE onError", 'requestCount='+reqCnt, error, xhr);
+                };
+                xhr.send();
+
+            }, 1000 );
+
+
+            var html = (document.getElementsByTagName('body')[0]).innerHTML;
+            html = html.replaceAll("{{message}}", "Started: "+ new Date());
+            (document.getElementsByTagName('body')[0]).innerHTML = html;
+
+            console.log('started.');
+        };
+
+    </script>
+
+</head>
+
+
+<body>
+
+    <div>TestScreen</diV>
+    <div>{{message}}</div>
+
+</body>
+
+</html>
