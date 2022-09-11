@@ -105,6 +105,10 @@ public class BrowserAdaptor {
         log.info("started Browser");
     }
 
+    public void lastPing() {
+        this.lastPing = LocalDateTime.now();
+    }
+
     @Scheduled(fixedRate = 3000)
     public void checkAlive() {
 
@@ -136,10 +140,14 @@ public class BrowserAdaptor {
 
         } else {
 
-            lastPing = LocalDateTime.now();
+            lastPing();
         }
 
         return new PingResponse(isValid);
+    }
+
+    public String getUuid() {
+        return uuid;
     }
 
     @Data
